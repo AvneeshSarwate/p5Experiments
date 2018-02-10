@@ -32,6 +32,8 @@ var mod = (x, n) => ((x%n)+n)%n;
 var n = 200;
 var PI_n2 = Math.PI/n;
 var transRad = [.02, .02];//[15*sinN(t2/2), 15*cosN(t2/2)];
+
+//function that calculates the "original" path of the animation
 var calculatePosition = (t0, t2_4, i) => ({x: sinN(sin(t0*2 + cos(t0)*5) * 4) * centerX + centerX/2 + sin(t2_4+i*PI_n2) * transRad[0]*(n-i), 
                                      y: cosN(cos(t0*2 + sin(t0)*5) * 4) * centerY + centerY/2 + cos(t2_4+i*PI_n2) * transRad[1]*(n-i)});
 var points = new Array(n).fill(0).map((x, i) => calculatePosition(0 - 0.01*i, 0, i)); //initialize shape
@@ -51,29 +53,41 @@ function optical(draw=true){
     t2_4 += 0.02;
     var decay = 1 ;//+ sinN(t2) * 0.02;   
     var devWeight = 2;
+    var returnDevWeight = 5;
      
     for (var i = n-1; i >= 0; i--) {
-        //if(draw)translate(sin(t2_4+i*PI_n2) * transRad[0]*(n-i), cos(t2_4+i*PI_n2) * transRad[1]*(n-i));
         if(draw) fill((time4*(1/tStep)+i)%255);
+        if(draw) ellipse(points[i].x, points[i].y, 100, 100);
+    }
+
+    for (var i = n-1; i >= 0; i--) {
+        //if(draw)translate(sin(t2_4+i*PI_n2) * transRad[0]*(n-i), cos(t2_4+i*PI_n2) * transRad[1]*(n-i));
+        var point = points[i];
         var t0 = time4 - i*tStep;
         var pos = calculatePosition(t0, t2_4, i); 
-        var lastPos = calculatePosition(t0-tStep, t2_4-0.02, i);
-        var circleDevInd = toCellInd(points[i].x, points[i].y, vidScale);
+        var lastPos = calculatePosition(t0-tStep, t2_4-0.02, i); //position 1 timestep back
+        var pathDev = {x: pos.x - lastPos.x, y: pos.y - lastPos.y} //the incrimental movement of the circle due to the "orignal" path movement
+
+        //what "cell" of video to get optical flow value from for this circle
+        var circleDevInd = toCellInd(points[i].x, points[i].y, vidScale); 
         circleDevInd = {x: Math.floor(circleDevInd.x), y: Math.floor(circleDevInd.y)};
         if(circleDevInd.x > devGrid.length || circleDevInd.y > devGrid[0].length) {
             console.log("index");
         }
-        var circleDev = devGrid[circleDevInd.x][circleDevInd.y];
+        var circleDev = devGrid[circleDevInd.x][circleDevInd.y]; //optical flow "force" for the circle
         if(!circleDev){
             console.log("dev");
         }
-        var posDiff = {x: pos.x - lastPos.x + circleDev.x*devWeight, y: pos.y - lastPos.y + circleDev.y*devWeight};
+
+        var returnDev = {x: pos.x-point.x, y: pos.y-point.y}; //raw position difference between "original" path and current position
+        var returnDevNorm = returnDevWeight/(returnDev.x**2 + returnDev.y**2)**1/2;
+        returnDev = {x: returnDev.x * returnDevNorm, y: returnDev.y * returnDevNorm}; //the final "force" pushing a circle back to its original path
+
+        var posDiff = {x: pathDev.x + circleDev.x*devWeight, y: pathDev.y + circleDev.y*devWeight};
         // points[i] = new p5.Vector(pos.x, pos.y);
         // if(draw) ellipse(mod((points[i].x + uDev),w), mod((points[i].y + vDev),h), 100, 100);
-        var point = points[i];
-        var newPoint = new p5.Vector(mod((point.x + posDiff.x), w), mod((point.y+posDiff.y), h));
+        var newPoint = new p5.Vector(mod((point.x + posDiff.x + returnDev.x), w), mod((point.y + posDiff.y + returnDev.y), h));
         points[i] = newPoint;
-        if(draw) ellipse(newPoint.x, newPoint.y, 100, 100);
     }
 
     capture.loadPixels();
