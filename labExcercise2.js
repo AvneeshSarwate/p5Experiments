@@ -1,12 +1,4 @@
-var canvasX = 1280*1.2;
-var canvasY = 720*1.2;
-var centerX = canvasX/2;
-var centerY = canvasY/2;
 var showTree = true;
-var cos = Math.cos;
-var sin = Math.sin;
-var sinN = n => (sin(n)+1)/2;
-var cosN = n => (cos(n)+1)/2;
 var textureVid;
 var time = 0;
 var t2 = 0;
@@ -17,6 +9,10 @@ var colorInd = 0;
 var frameInd = 0;
 var indStart = 0;
 var frameInd = 0;
+var cos = Math.cos;
+var sin = Math.sin;
+var sinN = n => (sin(n)+1)/2;
+var cosN = n => (cos(n)+1)/2;
 
 var capture; 
 
