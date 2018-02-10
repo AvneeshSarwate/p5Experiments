@@ -42,7 +42,7 @@ var devDim = [Math.floor((w/vidScale-step-1)/(2*step+1))+1, Math.floor((h/vidSca
 var devGrid = new Array(devDim[0]).fill(0).map(x => new Array(devDim[1]).fill(0).map(x => ({x:0, y:0})));
 //add scale value because our drawing is a different size than our camera frame
 var toCellInd = (x, y, scale) => ({x: Math.max((x/scale-step-1)/(2*step+1), 0), y: Math.max((y/scale-step-1)/(2*step+1), 0)});
-
+var maxFlow = 0;
 function optical(draw=true){
     if(draw) clear();
 
@@ -50,7 +50,7 @@ function optical(draw=true){
     time4 += tStep;
     t2_4 += 0.02;
     var decay = 1 ;//+ sinN(t2) * 0.02;   
-    var devWeight = 5;
+    var devWeight = 2;
      
     for (var i = n-1; i >= 0; i--) {
         //if(draw)translate(sin(t2_4+i*PI_n2) * transRad[0]*(n-i), cos(t2_4+i*PI_n2) * transRad[1]*(n-i));
@@ -100,13 +100,12 @@ function optical(draw=true){
                 // stroke(map(zone.u, -step, +step, 0, 255), map(zone.v, -step, +step, 0, 255), 128);
                 //fliped visualization to look like proper mirroring
                 // line(hFlip((zone.x*vidScale), w/2), zone.y*vidScale, hFlip((zone.x + zone.u)*vidScale, w/2), (zone.y + zone.v)*vidScale);
-                var zoneInds =  toCellInd(zone.x, zone.y, 1);
-                try{
-                    devGrid[zoneInds.x][zoneInds.y] = {x: zone.u, y: zone.v};
-                }
-                catch(err){
-                    console.log(zoneInds);
-                }
+                var zoneInds =  toCellInd(zone.x, zone.y, 1); 
+                zoneInds.x = (devDim[0]-1) - zoneInds.x; //flip x axis b/c camera is flipped
+                var flowThresh = 5;
+                var filteredFlow = {u: Math.abs(zone.u) < flowThresh ? 0 : zone.u, v: Math.abs(zone.v) < flowThresh ? 0 : zone.v };
+                devGrid[zoneInds.x][zoneInds.y] = {x: -filteredFlow.u, y: filteredFlow.v}; //flip x-dev direction b/c camera is flipped
+
             });
             uDev += -flow.flow.u * 10;
             vDev += flow.flow.v * 10;
