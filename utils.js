@@ -74,7 +74,7 @@ class Graph {
         return (this.history[i] - this.minValue) / range;
     }
 
-    draw(width, height) {
+    draw(width, height, shift=0) {
         push();
         noFill();
         strokeWeight(1);
@@ -84,7 +84,7 @@ class Graph {
             var i = (this.index + offset) % this.historyLength;
             var x = (offset * width) / this.historyLength;
             var normalized = (this.history[i] - this.minValue) / range;
-            var y = height - (normalized * height);
+            var y = height - (normalized * height) + shift;
             vertex(x, y);
         }
         endShape();
