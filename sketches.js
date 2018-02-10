@@ -45,6 +45,10 @@ var devGrid = new Array(devDim[0]).fill(0).map(x => new Array(devDim[1]).fill(0)
 //add scale value because our drawing is a different size than our camera frame
 var toCellInd = (x, y, scale) => ({x: Math.max((x/scale-step-1)/(2*step+1), 0), y: Math.max((y/scale-step-1)/(2*step+1), 0)});
 var maxFlow = 0;
+
+var positions = new Array(n).fill(0).map((x, i) => calculatePosition(0 - 0.01*i, 0, i));
+var lastPositions = new Array(n).fill(0).map((x, i) => calculatePosition(0 - 0.01*(i+1), -0.02, i));
+
 function optical(draw=true){
     if(draw) clear();
 
@@ -60,24 +64,20 @@ function optical(draw=true){
         if(draw) ellipse(points[i].x, points[i].y, 100, 100);
     }
 
+    positions = new Array(n).fill(0).map((x, i) => calculatePosition(time4 - tStep*i, t2_4, i));
+
     for (var i = n-1; i >= 0; i--) {
         //if(draw)translate(sin(t2_4+i*PI_n2) * transRad[0]*(n-i), cos(t2_4+i*PI_n2) * transRad[1]*(n-i));
         var point = points[i];
         var t0 = time4 - i*tStep;
-        var pos = calculatePosition(t0, t2_4, i); 
-        var lastPos = calculatePosition(t0-tStep, t2_4-0.02, i); //position 1 timestep back
+        var pos = positions[i]; 
+        var lastPos = lastPositions[i]; //position 1 timestep back
         var pathDev = {x: pos.x - lastPos.x, y: pos.y - lastPos.y} //the incrimental movement of the circle due to the "orignal" path movement
 
         //what "cell" of video to get optical flow value from for this circle
         var circleDevInd = toCellInd(points[i].x, points[i].y, vidScale); 
         circleDevInd = {x: Math.floor(circleDevInd.x), y: Math.floor(circleDevInd.y)};
-        if(circleDevInd.x > devGrid.length || circleDevInd.y > devGrid[0].length) {
-            console.log("index");
-        }
         var circleDev = devGrid[circleDevInd.x][circleDevInd.y]; //optical flow "force" for the circle
-        if(!circleDev){
-            console.log("dev");
-        }
 
         var returnDev = {x: lastPos.x-point.x, y: lastPos.y-point.y}; //raw position difference between "original" path and current position
         var returnMag = (returnDev.x**2 + returnDev.y**2)**(1/2);
@@ -92,6 +92,8 @@ function optical(draw=true){
         var newPoint = new p5.Vector(mod((point.x + posDiff.x), w), mod((point.y + posDiff.y ), h));
         points[i] = newPoint;
     }
+
+    lastPositions = positions;
 
     capture.loadPixels();
 
@@ -109,8 +111,8 @@ function optical(draw=true){
 
 
         if (flow.flow && flow.flow.u != 0 && flow.flow.v != 0) {
-            uMotionGraph.addSample(flow.flow.u);
-            vMotionGraph.addSample(flow.flow.v);
+            // uMotionGraph.addSample(flow.flow.u);
+            // vMotionGraph.addSample(flow.flow.v);
 
             strokeWeight(2);
             flow.flow.zones.forEach((zone) => {
