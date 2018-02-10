@@ -53,7 +53,7 @@ function optical(draw=true){
     t2_4 += 0.02;
     var decay = 1 ;//+ sinN(t2) * 0.02;   
     var devWeight = 2;
-    var returnDevWeight = 5;
+    var returnDevWeight = 2;
      
     for (var i = n-1; i >= 0; i--) {
         if(draw) fill((time4*(1/tStep)+i)%255);
@@ -79,14 +79,17 @@ function optical(draw=true){
             console.log("dev");
         }
 
-        var returnDev = {x: pos.x-point.x, y: pos.y-point.y}; //raw position difference between "original" path and current position
-        var returnDevNorm = returnDevWeight/(returnDev.x**2 + returnDev.y**2)**1/2;
+        var returnDev = {x: lastPos.x-point.x, y: lastPos.y-point.y}; //raw position difference between "original" path and current position
+        var returnMag = (returnDev.x**2 + returnDev.y**2)**(1/2);
+        var returnDevNorm = returnMag == 0 ? 0 : returnDevWeight/returnMag;
         returnDev = {x: returnDev.x * returnDevNorm, y: returnDev.y * returnDevNorm}; //the final "force" pushing a circle back to its original path
+        // circleDev = {x:0, y:0};
+        
 
-        var posDiff = {x: pathDev.x + circleDev.x*devWeight, y: pathDev.y + circleDev.y*devWeight};
+        var posDiff = {x: pathDev.x + circleDev.x*devWeight + returnDev.x, y: pathDev.y + circleDev.y*devWeight + returnDev.y};
         // points[i] = new p5.Vector(pos.x, pos.y);
         // if(draw) ellipse(mod((points[i].x + uDev),w), mod((points[i].y + vDev),h), 100, 100);
-        var newPoint = new p5.Vector(mod((point.x + posDiff.x + returnDev.x), w), mod((point.y + posDiff.y + returnDev.y), h));
+        var newPoint = new p5.Vector(mod((point.x + posDiff.x), w), mod((point.y + posDiff.y ), h));
         points[i] = newPoint;
     }
 
@@ -111,9 +114,9 @@ function optical(draw=true){
 
             strokeWeight(2);
             flow.flow.zones.forEach((zone) => {
-                // stroke(map(zone.u, -step, +step, 0, 255), map(zone.v, -step, +step, 0, 255), 128);
+                stroke(map(zone.u, -step, +step, 0, 255), map(zone.v, -step, +step, 0, 255), 128);
                 //fliped visualization to look like proper mirroring
-                // line(hFlip((zone.x*vidScale), w/2), zone.y*vidScale, hFlip((zone.x + zone.u)*vidScale, w/2), (zone.y + zone.v)*vidScale);
+                line(hFlip((zone.x*vidScale), w/2), zone.y*vidScale, hFlip((zone.x + zone.u)*vidScale, w/2), (zone.y + zone.v)*vidScale);
                 var zoneInds =  toCellInd(zone.x, zone.y, 1); 
                 zoneInds.x = (devDim[0]-1) - zoneInds.x; //flip x axis b/c camera is flipped
                 var flowThresh = 5;
