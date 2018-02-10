@@ -90,6 +90,7 @@ function drawShaders() {
   quad(-1, -1, 1*sinN(time)/2, -1, 1*sinN(time)/2, 1*sinN(time)/2, -1, 1*sinN(time)/2);
 }
 
+
 function sigmoid(t) {
     return 1/(1+Math.pow(Math.E, -t));
 }
@@ -98,7 +99,8 @@ function setup(){
     createCanvas(1280, 720);
 }
 
-function draw(){
+
+function blend1(){
     clear();
     var v1 = draw1pos();
     var v2 = draw4pos();
@@ -109,6 +111,19 @@ function draw(){
         var y = v1[i].y * blend + v2[i].y * (1-blend);
         ellipse(x, y, 100, 100);
     }
+}
+
+var drawFunc;
+try {
+    drawFunc = eval(window.location.href.split("?")[1]);
+    drawFunc = drawFunc ? drawFunc : blend;
+} catch(err) {
+    drawFunc = blend1;
+}
+
+
+function draw(){
+    drawFunc();
 }
 
 function draw1(){
