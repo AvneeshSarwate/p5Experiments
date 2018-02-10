@@ -18,87 +18,17 @@ var frameInd = 0;
 var indStart = 0;
 var frameInd = 0;
 
+var capture; 
 
-var varying = 'precision highp float; varying vec2 vPos;';
-
-// the vertex shader is called for each vertex
-var vs =
-  varying +
-  'attribute vec3 aPosition;' +
-  'void main() { vPos = (gl_Position = vec4(aPosition,1.0)).xy; }';
-
-// the fragment shader is called for each pixel
-var fs =
-  varying +
-  'uniform vec2 p;' +
-  'uniform float r;' +
-  'const int I = 500;' +
-  'void main() {' +
-  '  vec2 c = p + vPos * r, z = c;' +
-  '  float n = 0.0;' +
-  '  for (int i = I; i > 0; i --) {' +
-  '    if(z.x*z.x+z.y*z.y > 4.0) {' +
-  '      n = float(i)/float(I);' +
-  '      break;' +
-  '    }' +
-  '    z = vec2(z.x*z.x-z.y*z.y, 2.0*z.x*z.y) + c;' +
-  '  }' +
-  '  gl_FragColor = vec4(0.5-cos(n*17.0)/2.0,0.5-cos(n*13.0)/2.0,0.5-cos(n*23.0)/2.0,1.0);' +
-  '}';
-
-var fs2 =
-  varying +
-  'uniform vec2 p;' +
-  'uniform float r;' +
-  'const int I = 500;' +
-  'void main() {' +
-  '  vec2 c = p + vPos * r, z = c;' +
-  '  float n = 0.0;' +
-  '  for (int i = I; i > 0; i --) {' +
-  '    if(z.x*z.x+z.y*z.y > 4.0) {' +
-  '      n = float(i)/float(I);' +
-  '      break;' +
-  '    }' +
-  '    z = vec2(z.x*z.x-z.y*z.y, 2.0*z.x*z.y) + c;' +
-  '  }' +
-  '  gl_FragColor = 1.- vec4(0.5-cos(n*17.0)/2.0,0.5-cos(n*13.0)/2.0,0.5-cos(n*23.0)/2.0,1.0);' +
-  '}';
-
-var mandel;
-var sh2;
-function setupShaders() {
-  createCanvas(1280, 720, WEBGL);
-
-  // create and initialize the shader
-  mandel = createShader(vs, fs);
-  sh2 = createShader(vs, fs2);
-  shader(sh2);
-  noStroke();
-  frameRate(30);
-  // 'p' is the center point of the Mandelbrot image
-  mandel.setUniform('p', [-0.74364388703, 0.13182590421]);
-}
-
-function drawShaders() {
-  // 'r' is the size of the image in Mandelbrot-space
-  clear();
-  shader(sh2);
-  quad(-1, -1, 1, -1, 1, 1, -1, 1);
-  mandel.setUniform('r', 1.5 * exp(-6.5 * (1 + sin(millis() / 2000))));
-  time += 0.1;
-  shader(mandel);
-  quad(-1, -1, 1*sinN(time)/2, -1, 1*sinN(time)/2, 1*sinN(time)/2, -1, 1*sinN(time)/2);
-}
 
 
 function sigmoid(t) {
     return 1/(1+Math.pow(Math.E, -t));
 }
 
-function setup(){
+function blend1Setup(){
     createCanvas(1280, 720);
 }
-
 
 function blend1(){
     clear();
@@ -114,17 +44,27 @@ function blend1(){
 }
 
 var drawFunc;
+var drawFuncName;
+var setupFunc;
 try {
-    drawFunc = eval(window.location.href.split("?")[1]);
+    drawFuncName = window.location.href.split("?")[1];
+    drawFunc = eval(drawFuncName);
     drawFunc = drawFunc ? drawFunc : blend;
 } catch(err) {
     drawFunc = blend1;
+    drawFuncName = "blend1";
 }
 
+setupFunc = eval(drawFuncName+"Setup");
+
+function setup(){
+  setupFunc();
+}
 
 function draw(){
-    drawFunc();
+  drawFunc(true);
 }
+
 
 function draw1(){
     clear();
@@ -268,12 +208,91 @@ function draw4pos(draw){
     var transRad = [.02, .02];//[15*sinN(t2/2), 15*cosN(t2/2)];
     var decay = 1 ;//+ sinN(t2) * 0.02;
     var points = new Array(n);
+    var translateAccum = [0, 0];
     for (var i = n; i > 0; i--) {
-        if(draw)translate(sin(t2_4+i*PI_n2) * transRad[0]*(n-i), cos(t2_4+i*PI_n2) * transRad[1]*(n-i));
+        //if(draw)translate(sin(t2_4+i*PI_n2) * transRad[0]*(n-i), cos(t2_4+i*PI_n2) * transRad[1]*(n-i));
         if(draw) fill((time4*(1/tStep)+i)%255);
+        //The below line works, I just don't want it right now
+        //translateAccum = [translateAccum[0]+sin(t2_4+i*PI_n2) * transRad[0]*(n-i), translateAccum[1]+cos(t2_4+i*PI_n2) * transRad[1]*(n-i)];
         var t0 = time4 - i*tStep;
-        points[i] = new p5.Vector(sinN(sin(t0*2 + cos(t0)*5) * 4) * centerX + centerX/2 + sin(t2_4+i*PI_n2) * transRad[0]*(n-i), cosN(cos(t0*2 + sin(t0)*5) * 4) * centerY + centerY/2 + cos(t2_4+i*PI_n2) * transRad[1]*(n-i));
+        points[i] = new p5.Vector(sinN(sin(t0*2 + cos(t0)*5) * 4) * centerX + centerX/2 + translateAccum[0], 
+                                  cosN(cos(t0*2 + sin(t0)*5) * 4) * centerY + centerY/2 + translateAccum[1]);
         if(draw) ellipse(points[i].x, points[i].y, 100, 100);
     }
     return points;          
+}
+
+
+
+
+
+var varying = 'precision highp float; varying vec2 vPos;';
+
+// the vertex shader is called for each vertex
+var vs =
+  varying +
+  'attribute vec3 aPosition;' +
+  'void main() { vPos = (gl_Position = vec4(aPosition,1.0)).xy; }';
+
+// the fragment shader is called for each pixel
+var fs =
+  varying +
+  'uniform vec2 p;' +
+  'uniform float r;' +
+  'const int I = 500;' +
+  'void main() {' +
+  '  vec2 c = p + vPos * r, z = c;' +
+  '  float n = 0.0;' +
+  '  for (int i = I; i > 0; i --) {' +
+  '    if(z.x*z.x+z.y*z.y > 4.0) {' +
+  '      n = float(i)/float(I);' +
+  '      break;' +
+  '    }' +
+  '    z = vec2(z.x*z.x-z.y*z.y, 2.0*z.x*z.y) + c;' +
+  '  }' +
+  '  gl_FragColor = vec4(0.5-cos(n*17.0)/2.0,0.5-cos(n*13.0)/2.0,0.5-cos(n*23.0)/2.0,1.0);' +
+  '}';
+
+var fs2 =
+  varying +
+  'uniform vec2 p;' +
+  'uniform float r;' +
+  'const int I = 500;' +
+  'void main() {' +
+  '  vec2 c = p + vPos * r, z = c;' +
+  '  float n = 0.0;' +
+  '  for (int i = I; i > 0; i --) {' +
+  '    if(z.x*z.x+z.y*z.y > 4.0) {' +
+  '      n = float(i)/float(I);' +
+  '      break;' +
+  '    }' +
+  '    z = vec2(z.x*z.x-z.y*z.y, 2.0*z.x*z.y) + c;' +
+  '  }' +
+  '  gl_FragColor = 1.- vec4(0.5-cos(n*17.0)/2.0,0.5-cos(n*13.0)/2.0,0.5-cos(n*23.0)/2.0,1.0);' +
+  '}';
+
+var mandel;
+var sh2;
+function setup_shaders() {
+  createCanvas(1280, 720, WEBGL);
+
+  // create and initialize the shader
+  mandel = createShader(vs, fs);
+  sh2 = createShader(vs, fs2);
+  shader(sh2);
+  noStroke();
+  frameRate(30);
+  // 'p' is the center point of the Mandelbrot image
+  mandel.setUniform('p', [-0.74364388703, 0.13182590421]);
+}
+
+function draw_shaders() {
+  // 'r' is the size of the image in Mandelbrot-space
+  clear();
+  shader(sh2);
+  quad(-1, -1, 1, -1, 1, 1, -1, 1);
+  mandel.setUniform('r', 1.5 * exp(-6.5 * (1 + sin(millis() / 2000))));
+  time += 0.1;
+  shader(mandel);
+  quad(-1, -1, 1*sinN(time)/2, -1, 1*sinN(time)/2, 1*sinN(time)/2, -1, 1*sinN(time)/2);
 }
