@@ -199,7 +199,7 @@ function hulldraw(){
         noFill();
         strokeWeight(10);
         stroke(0);
-        var hullPoints = hull(flowScreenPoints, 20);
+        var hullPoints = hull(flowScreenPoints, 300);
         var useBezier = false;
         if(useBezier) { 
             bezier.apply(null, [].concat.apply([], hullPoints));
@@ -209,7 +209,7 @@ function hulldraw(){
             for(var i = 0; i < hullPoints.length; i++){
                 curveVertex(hullPoints[i][0], hullPoints[i][1]);
             }
-            endShape();
+            endShape(CLOSE);
         }
     } 
 }
