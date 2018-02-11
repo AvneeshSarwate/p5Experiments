@@ -144,3 +144,72 @@ function optical(draw=true){
     frameInd++;
     return points;          
 }
+
+
+function hulldrawSetup(){
+    createCanvas(w, h);
+    capture = createCapture(VIDEO);
+    capture.size(w/vidScale, h/vidScale);
+    capture.hide();
+    flow = new FlowCalculator(step);
+    frameRate(20);
+}
+
+function hulldraw(){
+    clear();
+    capture.loadPixels();
+
+    if (capture.pixels.length > 0) {
+        if (previousPixels) {
+
+            // cheap way to ignore duplicate frames
+            if (same(previousPixels, capture.pixels, 4, width)) {
+                return;
+            }
+
+            flow.calculate(previousPixels, capture.pixels, capture.width, capture.height);
+        }
+        previousPixels = copyImage(capture.pixels, previousPixels);
+
+        var flowScreenPoints = new Array();
+
+        if (flow.flow && flow.flow.u != 0 && flow.flow.v != 0) {
+            // uMotionGraph.addSample(flow.flow.u);
+            // vMotionGraph.addSample(flow.flow.v);
+
+            strokeWeight(2);
+            flow.flow.zones.forEach((zone, i) => {
+                stroke(map(zone.u, -step, +step, 0, 255), map(zone.v, -step, +step, 0, 255), 128);
+                //fliped visualization to look like proper mirroring
+                strokeWeight(Math.abs(zone.u) + Math.abs(zone.v));
+                line(hFlip((zone.x*vidScale), w/2), zone.y*vidScale, hFlip((zone.x + zone.u)*vidScale, w/2), (zone.y + zone.v)*vidScale);
+                var flowThresh = 5;
+                if(Math.abs(zone.u) > flowThresh && Math.abs(zone.v) > flowThresh){
+                    flowScreenPoints.push([hFlip((zone.x*vidScale), w/2), zone.y*vidScale]);
+                }
+
+                var zoneInds =  toCellInd(zone.x, zone.y, 1); 
+                zoneInds.x = (devDim[0]-1) - zoneInds.x; //flip x axis b/c camera is flipped
+                var flowThresh = 5;
+                var filteredFlow = {u: Math.abs(zone.u) < flowThresh ? 0 : zone.u, v: Math.abs(zone.v) < flowThresh ? 0 : zone.v };
+
+            });
+        }
+
+        noFill();
+        strokeWeight(10);
+        stroke(0);
+        var hullPoints = hull(flowScreenPoints, 20);
+        var useBezier = false;
+        if(useBezier) { 
+            bezier.apply(null, [].concat.apply([], hullPoints));
+            // bezier(85, 20, 10, 10, 90, 90, 15, 80);
+        } else {
+            beginShape();
+            for(var i = 0; i < hullPoints.length; i++){
+                curveVertex(hullPoints[i][0], hullPoints[i][1]);
+            }
+            endShape();
+        }
+    } 
+}
