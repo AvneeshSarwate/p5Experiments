@@ -245,7 +245,7 @@ var distances;
 function bodygrav(draw=true){
     if(draw) clear();
 
-    var tStep = 0.01;
+    var tStep = 0.2; 0.2+0.6*sinN(t2_4);
     time4 += tStep;
     t2_4 += 0.02;
     var decay = 1 ;//+ sinN(t2) * 0.02;   
@@ -253,11 +253,12 @@ function bodygrav(draw=true){
     var returnDevWeight = 2;
      
     for (var i = 0; i < points.length; i++) {
-        fill(sigmoid((distances[i]-8)/2)*255);
+        fill(sigmoid(distances[i]/4 - 8)*255);
         // ellipse(points[i].x, points[i].y, 10, 10);
         var p=points[i];
-        var r=5;
-        rect(p.x-r, p.y-r, 2*r, 2*r);
+        var r=10;
+        // rect(p.x-r, p.y-r, 2*r, 2*r);
+        rect(p.x-r, p.y-r, r+2*r*sinN(time4+i*sinN(tStep/4)),r+2*r*cosN(time4+i*cosN(tStep/4)));
     }
 
     for (var i = 0; i < points.length; i++) {
