@@ -14,6 +14,25 @@ class FlowCalculator {
     this.step = step;
   }
 
+  flowCellCenters(width, height, vidScale){
+    var step = this.step;
+    var winStep = step * 2 + 1;
+
+    var wMax = width - step - 1;
+    var hMax = height - step - 1;
+
+    var cellCenters = new Array();
+
+    for (var globalX = step + 1; globalX < wMax; globalX += winStep) {
+      for (var globalY = step + 1; globalY < hMax; globalY += winStep) {
+        let xVal = globalX*vidScale;
+        let yVal = globalY*vidScale;
+        cellCenters.push({x: xVal, y: yVal});
+      }
+    }
+    return cellCenters;
+  }
+
   // assumes rgba images, but only uses one channel
   calculate (oldImage, newImage, width, height) {
     var zones = [];
