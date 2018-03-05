@@ -29,7 +29,6 @@ function opticalSetup() {
     flow = new FlowCalculator(step);
     uMotionGraph = new Graph(100, -step / 2, +step / 2);
     vMotionGraph = new Graph(100, -step / 2, +step / 2);
-    frameRate(40);
 }
 
 var hFlip = (n, x) => (n-x)*-1+x; //flip a point around an x-axis value
@@ -63,7 +62,7 @@ function optical(draw=true){
     time4 += tStep;
     t2_4 += 0.02;
     var decay = 1 ;//+ sinN(t2) * 0.02;   
-    var devWeight = 4;
+    var devWeight = 2;
     var returnDevWeight = 2;
      
     for (var i = n-1; i >= 0; i--) {
@@ -87,7 +86,7 @@ function optical(draw=true){
         var circleDev = devGrid[circleDevInd.x][circleDevInd.y]; //optical flow "force" for the circle
 
         var returnDev = {x: lastPos.x-point.x, y: lastPos.y-point.y}; //raw position difference between "original" path and current position
-        var returnMag = (returnDev.x**2 + returnDev.y**2)**(1/3);
+        var returnMag = (returnDev.x**2 + returnDev.y**2)**(1/2);
         var returnDevNorm = returnMag == 0 ? 0 : returnDevWeight/returnMag;
         returnDev = {x: returnDev.x * returnDevNorm, y: returnDev.y * returnDevNorm}; //the final "force" pushing a circle back to its original path
         // circleDev = {x:0, y:0};
@@ -107,10 +106,12 @@ function optical(draw=true){
     if (capture.pixels.length > 0) {
         if (previousPixels) {
 
-            // cheap way to ignore duplicate frame calculation (but still want to leave the last flow on the screen)
-            if (!same(previousPixels, capture.pixels, 4, width)) {
-                flow.calculate(previousPixels, capture.pixels, capture.width, capture.height);
+            // cheap way to ignore duplicate frames
+            if (same(previousPixels, capture.pixels, 4, width)) {
+                return;
             }
+
+            flow.calculate(previousPixels, capture.pixels, capture.width, capture.height);
         }
         previousPixels = copyImage(capture.pixels, previousPixels);
 
@@ -119,11 +120,11 @@ function optical(draw=true){
             // uMotionGraph.addSample(flow.flow.u);
             // vMotionGraph.addSample(flow.flow.v);
 
-            strokeWeight(4);
+            strokeWeight(2);
             flow.flow.zones.forEach((zone) => {
                 stroke(map(zone.u, -step, +step, 0, 255), map(zone.v, -step, +step, 0, 255), 128);
                 //fliped visualization to look like proper mirroring
-                //line(hFlip((zone.x*vidScale), w/2), zone.y*vidScale, hFlip((zone.x + zone.u)*vidScale, w/2), (zone.y + zone.v)*vidScale);
+                line(hFlip((zone.x*vidScale), w/2), zone.y*vidScale, hFlip((zone.x + zone.u)*vidScale, w/2), (zone.y + zone.v)*vidScale);
                 var zoneInds =  toCellInd(zone.x, zone.y, 1); 
                 zoneInds.x = (devDim[0]-1) - zoneInds.x; //flip x axis b/c camera is flipped
                 var flowThresh = 5;
@@ -222,7 +223,7 @@ function hulldraw(){
 
 
 function bodygravSetup() {
-    vidScale = 1.2;
+    vidScale = 1.5;
     createCanvas(w, h);
     capture = createCapture(VIDEO);
     capture.size(w/vidScale, h/vidScale);
@@ -250,12 +251,12 @@ function bodygrav(draw=true){
     var decay = 1 ;//+ sinN(t2) * 0.02;   
     var devWeight = 2;
     var returnDevWeight = 2;
-    
-    var r=8;
+     
     for (var i = 0; i < points.length; i++) {
         fill(sigmoid(distances[i]/4 - 8)*255);
         // ellipse(points[i].x, points[i].y, 10, 10);
         var p=points[i];
+        var r=10;
         // rect(p.x-r, p.y-r, 2*r, 2*r);
         rect(p.x-r, p.y-r, r+2*r*sinN(time4+i*sinN(tStep/4)),r+2*r*cosN(time4+i*cosN(tStep/4)));
     }
@@ -285,7 +286,7 @@ function bodygrav(draw=true){
 
     capture.loadPixels();
 
-    if (capture.pixels.length > 0 && frameInd%2 == 0) {
+    if (capture.pixels.length > 0) {
         if (previousPixels) {
 
             // cheap way to ignore duplicate frames
