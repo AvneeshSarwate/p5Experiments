@@ -17,9 +17,14 @@ var pointData = [0];
 
 function senselSetup(){
 	createCanvas(w, h);
-	frameRate(100);
+	frameRate(120);
 }
 
+function sinColorDeviation(originalColor, deviationScale=50, sinSpeed=1){
+	var time = Date.now();
+	var transformColor = (col, i) => col + sin(time*sinSpeed*i)*deviationScale;
+	return originalColor.map(transformColor);
+}
 
 w = 1280;
 h = 720;
@@ -60,7 +65,7 @@ function sensel(){
 
 	activeTouches = new Set(Array.from(activeTouches.values()).filter(el => !deadTouches.has(el))); //remove dead touches from active
 	
-	console.log(frameTouches, newTouches, activeTouches, deadTouches);
+	//console.log(frameTouches, newTouches, activeTouches, deadTouches);
 	
 	newTouches.forEach(function(touchId) { //add start point of draw curve for new touches
 		touchToCurve[touchId] = curveCounter;
@@ -74,10 +79,21 @@ function sensel(){
 		var newPoint = frameTouchData[touchId];
 		var lastPoint = curvePoints[curvePoints.length-1];
 		var curveColor = curveTracker[curveId][1];
-		stroke(curveColor[0], curveColor[1], curveColor[2]);
-		strokeWeight(newPoint[2]/senselF * 150);
-		line(lastPoint[0] * drawXscale, lastPoint[1] * drawYscale, newPoint[0] * drawXscale, newPoint[1] * drawYscale);
 		curvePoints.push(newPoint);
+
+		var newColor = sinColorDeviation(curveColor, 100, 1/100);
+		stroke(newColor[0], newColor[1], newColor[2]);
+		strokeWeight(newPoint[2]/senselF * 150);
+		if(true || curvePoints.length < 4) {
+			line(lastPoint[0] * drawXscale, lastPoint[1] * drawYscale, newPoint[0] * drawXscale, newPoint[1] * drawYscale);
+		} else {
+			beginShape();
+			for(var i = 0; i < 4; i++){
+				var p = curvePoints[(curvePoints.length-1)-i];
+				curveVertex(p[0] * drawXscale, p[1] * drawYscale);
+			}
+			endShape();
+		}
 	});
 
 	activeTouches = activeTouches.union(newTouches);
