@@ -123,6 +123,12 @@ function sensel(){
     activeTouches = activeTouches.union(newTouches);
 }
 
+
+function senselblackSetup(){
+    createCanvas(w, h);
+    frameRate(120);
+}
+
 function senselblack(){
     //clear();
     // for(var i = 1; i < pointData.length; i += 4){
