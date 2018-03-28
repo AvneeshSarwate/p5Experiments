@@ -43,6 +43,7 @@ def waitForEnter():
 def openSensel():
     handle = None
     (error, device_list) = sensel.getDeviceList()
+    print "num devices", device_list.num_devices
     if device_list.num_devices != 0:
         (error, handle) = sensel.openDeviceByID(device_list.devices[0].idx)
     return handle
@@ -60,21 +61,32 @@ def scanFrames(frame, info):
         error = sensel.getFrame(handle, frame)
         printFrame(frame,info)
 
+def ae_snakeMessage(frame, info):
+    msg = OSC.OSCMessage()
+    msg.setAddress("/snakeTouch")
+    if frame.n_contacts > 0:
+        c = frame.contacts[0]
+        msg.append([c.x_pos, c.y_pos])
+        oscClient.send(msg)
+
+
+
 def printFrame(frame, info):
     msg = OSC.OSCMessage()
     msg.setAddress("/senselDraw")
     msg.append(frame.n_contacts)
     if frame.n_contacts > 0:
-        print "\nNum Contacts: ", frame.n_contacts
+        # print "\nNum Contacts: ", frame.n_contacts
         for n in range(frame.n_contacts):
             c = frame.contacts[n]
-            print "Contact ID: ", c.id, c.x_pos, c.y_pos, c.total_force
+            # print "Contact ID: ", c.id, c.x_pos, c.y_pos, c.total_force
             msg.append([c.id, c.x_pos, c.y_pos, c.total_force])
             if c.state == sensel.CONTACT_START:
                 sensel.setLEDBrightness(handle, c.id, 100)
             elif c.state == sensel.CONTACT_END:
                 sensel.setLEDBrightness(handle, c.id, 0)
     oscClient.send(msg)
+    ae_snakeMessage(frame, info)
 
 def closeSensel(frame):
     error = sensel.freeFrameData(handle, frame)
@@ -92,5 +104,7 @@ if __name__ == "__main__":
         t.start()
         while(enter_pressed == False):
             scanFrames(frame, info)
+        print "enter was pressed"
         closeSensel(frame)
+    print "no handle"
     
