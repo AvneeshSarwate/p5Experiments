@@ -387,7 +387,6 @@ function colorMap1(x, y, time){
 }
 
 
-var dist = (x1, y1, x2, y2) => ((x1-x2)**2 + (y1-y2)**2)**(0.5);
 function colorMap2(x, y, time){
     var circlepoint = [sinN(time/5), cosN(time/3)];
     return [dist(x,y,0.5,0.5)*255, dist(x,y,circlepoint[0],circlepoint[1])*255, sinN(time/11)*255];
@@ -410,6 +409,30 @@ function quantV(val, quantLev){
   return val.map(v => quant(v, quantLev)); 
 }
 
+//takes actual pixel index intergers as x and y (not normalized [0-1] values)
+function colorMap6(x, y, time){
+    var t2 = time ^ 255;
+    var t3 = time & (3 << 3);
+    
+    return [(((x << t3) + time) & 255) & 255, ((y + (time << 2)) ^ x) % 255, (t2 ^ 255) % 255];
+}
+
+//takes actual pixel index intergers as x and y (not normalized [0-1] values)
+function colorMap7(x, y, time){
+    var t2 = time ^ 255;
+    var t3 = time & (3 << 2);
+    
+    return [(((x << t3) + time) & 255) & 255, ((y + (time << 2)) ^ x) % 255, ((x^t2) | (y^t2)) % 255];
+}
+
+//takes actual pixel index intergers as x and y (not normalized [0-1] values)
+function colorMap8(x, y, time){
+    var t2 = time ^ 255;
+    var t3 = time & (167);
+    
+    return [((x^time) | (y^time)) % 255, ((x^t3) | (y^t2)) % 255, ((x^t2) | (y^t2)) % 255];
+}
+
 
 function terrace(){
     //loop through the pixels
@@ -421,6 +444,25 @@ function terrace(){
             // var timeVal =Math.floor(frames/5);
             var timeVal = frames;
             var c = colorMap5(x/xPix, y/yPix, timeVal);
+            // var c = colorMap6(x, y, timeVal);
+            c = quantV(c, 16);
+            stroke(c);
+            fill(c);
+            rect(x * cellX, y*cellY, cellX, cellY);
+        }
+    }
+    frames++;
+}
+
+function terrace2Setup(){
+    terraceSetup()
+}
+
+function terrace2(){
+    for(var x = 0; x < xPix; x++){
+        for(var y = 0; y < yPix; y++){
+            var timeVal = frames;
+            var c = colorMap8(x, y, timeVal);
             c = quantV(c, 16);
             stroke(c);
             fill(c);
