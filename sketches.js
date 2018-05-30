@@ -222,6 +222,7 @@ function hulldraw(){
 
 
 
+var dispNoise = [];
 function bodygravSetup() {
     vidScale = 1.5;
     createCanvas(w, h);
@@ -234,6 +235,7 @@ function bodygravSetup() {
     points = flow.flowCellCenters(w/vidScale, h/vidScale, vidScale);
     refPositions = flow.flowCellCenters(w/vidScale, h/vidScale, vidScale);
     distances = new Array(points.length).fill(0);
+    dispNoise = new Array(points.length).fill(0);
     //the calculation of num-cells comes from flow.js code
     devDim = [Math.floor((w/vidScale-step-1)/(2*step+1))+1, Math.floor((h/vidScale-step-1)/(2*step+1))+1]
     devGrid = new Array(devDim[0]).fill(0).map(x => new Array(devDim[1]).fill(0).map(x => ({x:0, y:0})));
@@ -251,14 +253,15 @@ function bodygrav(draw=true){
     var decay = 1 ;//+ sinN(t2) * 0.02;   
     var devWeight = 2;
     var returnDevWeight = 2;
-     
     for (var i = 0; i < points.length; i++) {
         fill(sigmoid(distances[i]/4 - 8)*255);
         // ellipse(points[i].x, points[i].y, 10, 10);
         var p=points[i];
         var r=10;
         // rect(p.x-r, p.y-r, 2*r, 2*r);
-        rect(p.x-r, p.y-r, r+2*r*sinN(time4+i*sinN(tStep/4)),r+2*r*cosN(time4+i*cosN(tStep/4)));
+        dispNoise[i] += (Math.random() - 0.5);
+        // rect(p.x-r + dispNoise[i], p.y-r + dispNoise[i], r+2*r*sinN(time4+i*sinN(tStep/4)) + dispNoise[i], r+2*r*cosN(time4+i*cosN(tStep/4)) + dispNoise[i]);
+        rect(p.x-r, p.y-r, r+2*r*sinN(time4+dispNoise[i]+i*sinN(tStep/4)), r+2*r*cosN(time4+dispNoise[i]+i*cosN(tStep/4)));
     }
 
     for (var i = 0; i < points.length; i++) {
@@ -334,3 +337,95 @@ function bodygrav(draw=true){
     return points;          
 }
 
+
+
+
+
+function blobWarpSetup(){
+    createCanvas(w, h);
+}
+
+
+function blobWarp(){
+    translate(50, 50);
+    stroke(255, 0, 0);
+    beginShape();
+    // Exterior part of shape, clockwise winding
+    curveVertex(-40, -40);
+    curveVertex(40, -40);
+    curveVertex(40, 40);
+    curveVertex(-40, 40);
+    curveVertex(-40, -40);
+    // Interior part of shape, counter-clockwise winding
+    
+    endShape(CLOSE);
+}
+
+
+
+/*the arduino doesn't have enough memory to draw a whole frame at once
+so we have to chunk the frame into blocks*/
+var blocksPerFrame = 5; 
+w=1280;
+h=720;
+function terraceSetup(){
+    createCanvas(w, h);
+    var fullFrameRate = 2.66; //
+    // frameRate(fullFrameRate * blocksPerFrame);
+}
+
+var xPix = 60; //number of pixels in x dimension on LED screen
+var yPix = 50; //number of pixels in y dimension on LED screen
+var cellX = w/xPix; //number of p5 pixels per LED pixel in x dimension
+var cellY = h/yPix; //number of p5 pixels per LED pixel in y dimension
+var frames = 0; //counter for number of frames
+var rowsPerDrawCycle = yPix / blocksPerFrame; 
+
+//takes 0-1 scaled x and y coordinates and a frame number count, returns an RGB value color array (3 values [0-255])
+function colorMap1(x, y, time){
+    return [((x * time/6.5) % 1) * 255, ((y * time/3.5) % 1) * 255, sinN(time/2.5) * 255];
+}
+
+
+var dist = (x1, y1, x2, y2) => ((x1-x2)**2 + (y1-y2)**2)**(0.5);
+function colorMap2(x, y, time){
+    var circlepoint = [sinN(time/5), cosN(time/3)];
+    return [dist(x,y,0.5,0.5)*255, dist(x,y,circlepoint[0],circlepoint[1])*255, sinN(time/11)*255];
+}
+
+function colorMap5(x, y, time){
+  function warp1(x, y, t){
+    return (x + t/10) % 1 * sinN(t/11) * (y + t/10) % 1 * cosN(t/13) * 255;
+  }
+  var t = time / 10;
+    return [warp1(x, y, t), warp1(x, y, t*2), warp1(x, y, t*3)]; 
+}
+
+//quantizes a 0-255 valiue into quanLev different levels (e.g, simulate 4 bit range)
+function quant(val, quantLevel){
+  return Math.floor(val/quantLevel) * quantLevel;
+}
+
+function quantV(val, quantLev){
+  return val.map(v => quant(v, quantLev)); 
+}
+
+
+function terrace(){
+    //loop through the pixels
+    var frameSliceRow = (frames % 5) * 10;
+    for(var x = 0; x < xPix; x++){
+        for(var y = 0; y < yPix; y++){
+
+            //set the color for the pixels
+            // var timeVal =Math.floor(frames/5);
+            var timeVal = frames;
+            var c = colorMap5(x/xPix, y/yPix, timeVal);
+            c = quantV(c, 16);
+            stroke(c);
+            fill(c);
+            rect(x * cellX, y*cellY, cellX, cellY);
+        }
+    }
+    frames++;
+}
