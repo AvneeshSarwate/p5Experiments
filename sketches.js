@@ -163,6 +163,7 @@ function hulldrawSetup(){
 
 function hulldraw(){
     clear();
+    background(255);
     capture.loadPixels();
 
     if (capture.pixels.length > 0) {
@@ -470,4 +471,160 @@ function terrace2(){
         }
     }
     frames++;
+}
+
+
+
+var p5w = 1280 * 1.5;
+var p5h = 720 * 1.5;
+var xStep = 10;
+var yStep = 10;
+var stepDist = 10;
+var xPos = p5w/2;
+var yPos = p5h/2;
+var mat;
+var sinN = t => (Math.sin(t)+1)/2
+var numPoints = 200;
+var arrayOf = n => Array.from(new Array(n), () => 0);
+var curvePoints = arrayOf(100);
+function mod(n, m) {
+  return ((n % m) + m) % m;
+}
+
+function wrapVal(val, low, high){
+    var range  = high - low;
+    if(val > high){
+        var dif = val-high;
+        var difMod = mod(dif, range);
+        var numWrap = (dif-difMod)/range;
+        // console.log("high", dif, difMod, numWrap)
+        if(mod(numWrap, 2) == 0){
+            return high - difMod;
+        } else {
+            return low + difMod;
+        }
+    }
+    if(val < low){
+        var dif = low-val;
+        var difMod = mod(dif, range);
+        var numWrap = (dif- difMod)/range ;
+        // console.log("low", dif, difMod, numWrap)
+        if(mod(numWrap, 2.) == 0.){
+            return low + difMod;
+        } else {
+            return high - difMod;
+        }
+    }
+    return val;
+}
+
+class Snake {
+    constructor(numPoints, snakeColor, switchFunc){
+        this.points = arrayOf(numPoints).map(x => [p5w/2, p5h/2]);
+        this.switchFunc = switchFunc;
+        this.xPos = p5w/2;
+        this.yPos = p5h/2;
+        this.stepDist = 10;
+        this.xStep = 10;
+        this.yStep = 10;
+        this.snakeColor = snakeColor;
+        this.numPoints = numPoints;
+    }
+
+    drawSnake(frameCount){
+        if(this.xPos + this.xStep > p5w || this.xPos + xStep < 0) this.xStep *= -1;
+        if(this.yPos + this.yStep > p5h || this.yPos + this.yStep < 0) this.yStep *= -1;
+        this.xPos = wrapVal(this.xPos+this.xStep, 0, p5w);
+        this.yPos = wrapVal(this.yPos+this.yStep, 0, p5h);
+        if(frameCount%60 == 0) {
+            this.xStep = sin(Math.random()*TWO_PI) * this.stepDist;
+            this.yStep = cos(Math.random()*TWO_PI) * this.stepDist;
+        }
+        var curveInd = frameCount%this.numPoints;
+        this.points[curveInd] = [this.xPos, this.yPos];
+        // fill(this.snakeColor);
+        noFill();
+        // strokeWeight(30);
+        stroke(this.snakeColor);
+        // beginShape();
+        for(var i = 0; i < this.numPoints-1; i++){ //indexing 
+            var p = this.points[(curveInd+i+1)%this.numPoints];
+            var p2 = this.points[(curveInd+i+2)%this.numPoints];
+            // ellipse(p[0], p[1], 4 + sinN((frameCount + i)/20)*30);
+            strokeWeight((4 + sinN((frameCount + i)/20)*50)*4)
+            line(p[0], p[1], p2[0], p2[1]);
+            // curveVertex(p[0], p[1]);
+        }
+        endShape();
+    }
+}
+
+var sneks = arrayOf(6);
+function phialSetup(){
+    createCanvas(p5w, p5h);
+    background(255);
+    sneks = sneks.map((x, i) => new Snake(200, color(i*10, i*10, i*10)));
+}
+
+function phial(){
+    clear();
+    background(255);
+    
+    // fill(0);
+    // if(xPos + xStep > p5w || xPos + xStep < 0) xStep *= -1;
+    // if(yPos + yStep > p5h || yPos + yStep < 0) yStep *= -1;
+    // xPos = wrapVal(xPos+xStep, 0, p5w);
+    // yPos = wrapVal(yPos+yStep, 0, p5h);
+    // if(frameCount%60 == 0) {
+    //     xStep = sin(Math.random()*TWO_PI) * stepDist;
+    //     yStep = cos(Math.random()*TWO_PI) * stepDist;
+    // }
+    // var curveInd = frameCount%numPoints;
+    // curvePoints[curveInd] = [xPos, yPos];
+    // if(frameCount > numPoints) {
+    //     // beginShape();
+    //     for(var i = 0; i < numPoints; i++){
+    //         var p = curvePoints[(curveInd+i)%numPoints];
+    //         // strokeWeight();
+    //         ellipse(p[0], p[1], 4 + sinN((frameCount + i)/20)*30);
+    //     }
+    //     // endShape();
+    // }
+    sneks.map(snek => snek.drawSnake(frameCount));
+    frameCount++;
+}
+
+var midiInfo;
+var rawMidi;
+var trackLen = 77;
+var noteColors = [
+    "blue",
+    "black",
+    "blue",
+    "blue",
+    "red",
+    "yellow",
+    "green",
+    "green"
+];
+function chairSqueakSetup(){
+    createCanvas(p5w, p5h);
+    MidiConvert.load("chairsqueak.mid", function(midi) {
+      console.log(midi);
+      rawMidi = midi;
+      midiInfo = midi.tracks[0].notes.map( n => [n.midi-64, n.time*2*71.5/60, n.duration*2*71.5/60])
+    });
+}
+
+function chairSqueak(){
+    var endOffsets = 30;
+    var pixPerSec = (p5w - 2*endOffsets) / 77;
+    var heighOffset = p5h/4;
+    var rectHeight = (p5h/2)/noteColors.length;
+    if(midiInfo){
+        midiInfo.forEach(note => {
+            fill(noteColors[note[0]]);
+            rect(note[1]*pixPerSec, p5h - (heighOffset + rectHeight*note[0]), note[2]*pixPerSec, rectHeight);
+        })
+    }
 }
