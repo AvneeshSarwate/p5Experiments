@@ -614,6 +614,8 @@ var colorKeyInfo = [
     ["blue", "down"],
     ["black", "unique phrase"]
 ];
+//low to high
+var pitchOrdering = [5, 3, 4, 2, 1, 0, 6, 7];
 function chairSqueakSetup(){
     createCanvas(p5w, p5h);
     MidiConvert.load("chairsqueak.mid", function(midi) {
@@ -650,7 +652,8 @@ function chairSqueak(){
     if(midiInfo){
         midiInfo.forEach(note => {
             fill(noteColors[note[0]]);
-            rect(note[1]*pixPerSec+endOffsets, p5h - (heighOffset + rectHeight*note[0]), note[2]*pixPerSec, rectHeight);
+            var pitchHeighInd = pitchOrdering.indexOf(note[0]);
+            rect(note[1]*pixPerSec+endOffsets, p5h - (heighOffset + rectHeight*pitchHeighInd), note[2]*pixPerSec, rectHeight);
         })
     }
     arrayOf(77).forEach((elem, ind) => {
@@ -665,5 +668,5 @@ function chairSqueak(){
             strokeWeight(5);
         }
         line(tickX, tickTop, tickX, tickTop+rectHeight*0.1);
-    })
+    });
 }
