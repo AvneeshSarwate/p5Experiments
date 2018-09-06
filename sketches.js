@@ -622,6 +622,7 @@ function chairSqueakSetup(){
       midiInfo = midi.tracks[0].notes.map( n => [n.midi-64, n.time*2*71.5/60, n.duration*2*71.5/60])
     });
     textSize(15);
+    textStyle(NORMAL);
 }
 
 function chairSqueak(){
@@ -633,15 +634,19 @@ function chairSqueak(){
 
     var keyOffset = 10;
     var titleOffset = 40;
+    strokeWeight(0.5);
     text("Pitch curve direction per sonic event", keyOffset, keyOffset*2);
     for(var i = 0; i < 5; i++){
+        strokeWeight(2);
         fill(colorKeyInfo[i][0]);
         rect(keyOffset, keyOffset + rectHeight/2 * i + titleOffset, 2.5*pixPerSec, rectHeight/2-10);
+        strokeWeight(0.5);
+        fill(0);
         text(colorKeyInfo[i][1], keyOffset +2.5*pixPerSec + 10, keyOffset + rectHeight/2 * (i+0.5) + titleOffset);
     }
 
 
-
+    strokeWeight(2);
     if(midiInfo){
         midiInfo.forEach(note => {
             fill(noteColors[note[0]]);
@@ -655,6 +660,7 @@ function chairSqueak(){
         strokeWeight(1);
         if(ind%5 == 0) {
             fill(0);
+            strokeWeight(0.5);
             text(""+ind, tickX, tickTop+rectHeight*0.4);
             strokeWeight(5);
         }
