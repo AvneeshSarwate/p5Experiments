@@ -607,6 +607,13 @@ var noteColors = [
     "green",
     "green"
 ];
+var colorKeyInfo = [
+    ["green", "up and down"],
+    ["yellow", "flat"],
+    ["red", "up"],
+    ["blue", "down"],
+    ["black", "unique phrase"]
+];
 function chairSqueakSetup(){
     createCanvas(p5w, p5h);
     MidiConvert.load("chairsqueak.mid", function(midi) {
@@ -614,6 +621,7 @@ function chairSqueakSetup(){
       rawMidi = midi;
       midiInfo = midi.tracks[0].notes.map( n => [n.midi-64, n.time*2*71.5/60, n.duration*2*71.5/60])
     });
+    textSize(15);
 }
 
 function chairSqueak(){
@@ -621,10 +629,35 @@ function chairSqueak(){
     var pixPerSec = (p5w - 2*endOffsets) / 77;
     var heighOffset = p5h/4;
     var rectHeight = (p5h/2)/noteColors.length;
+    strokeWeight(2);
+
+    var keyOffset = 10;
+    var titleOffset = 40;
+    text("Pitch curve direction per sonic event", keyOffset, keyOffset*2);
+    for(var i = 0; i < 5; i++){
+        fill(colorKeyInfo[i][0]);
+        rect(keyOffset, keyOffset + rectHeight/2 * i + titleOffset, 2.5*pixPerSec, rectHeight/2-10);
+        text(colorKeyInfo[i][1], keyOffset +2.5*pixPerSec + 10, keyOffset + rectHeight/2 * (i+0.5) + titleOffset);
+    }
+
+
+
     if(midiInfo){
         midiInfo.forEach(note => {
             fill(noteColors[note[0]]);
-            rect(note[1]*pixPerSec, p5h - (heighOffset + rectHeight*note[0]), note[2]*pixPerSec, rectHeight);
+            rect(note[1]*pixPerSec+endOffsets, p5h - (heighOffset + rectHeight*note[0]), note[2]*pixPerSec, rectHeight);
         })
     }
+    arrayOf(77).forEach((elem, ind) => {
+        stroke(0);
+        var tickX = endOffsets + ind*pixPerSec;
+        var tickTop = p5h - heighOffset + rectHeight + 10;
+        strokeWeight(1);
+        if(ind%5 == 0) {
+            fill(0);
+            text(""+ind, tickX, tickTop+rectHeight*0.4);
+            strokeWeight(5);
+        }
+        line(tickX, tickTop, tickX, tickTop+rectHeight*0.1);
+    })
 }
