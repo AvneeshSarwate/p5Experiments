@@ -56,7 +56,10 @@ var positions = new Array(n).fill(0).map((x, i) => calculatePosition(0 - 0.01*i,
 var lastPositions = new Array(n).fill(0).map((x, i) => calculatePosition(0 - 0.01*(i+1), -0.02, i));
 
 function optical(draw=true){
-    if(draw) clear();
+    if(draw) {
+        clear();
+        background(255);
+    }
 
     var tStep = 0.01;
     time4 += tStep;
@@ -246,7 +249,10 @@ function bodygravSetup() {
 var refPositions;
 var distances; 
 function bodygrav(draw=true){
-    if(draw) clear();
+    if(draw) {
+        clear();
+        background(255);
+    }
 
     var tStep = 0.2; 0.2+0.6*sinN(t2_4);
     time4 += tStep;
