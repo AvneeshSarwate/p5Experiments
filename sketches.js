@@ -680,6 +680,7 @@ function chairSqueak(){
 
 let faceImages = [];
 let facePlacements = [];
+let shuffleFace = [];
 function facesSetup(){
     createCanvas(w, h);
     faceImages[0] = loadImage("faces/jay.png");
@@ -693,16 +694,19 @@ function facesSetup(){
 
 
 function faces(){
-    let xStep = 80;
-    let yStep = 30;
+    let xStep = 60;
+    let yStep = 24;
     for(let x = 0; x < xStep; x++){
         for(let y = 0; y < yStep; y++){
             let xPos = w/xStep*x + (random()-0.5)*xStep;
             let yPos = h/yStep*y + (random()-0.5)*yStep;
             let faceInd = Math.floor(random()*6);
             facePlacements.push([xPos, yPos, faceInd]);
-            let face = faceImages[faceInd];
-            image(face, xPos, yPos, face.width/5, face.height/5);
         }
     }
+    shuffleFace = shuffle(facePlacements);
+    shuffleFace.forEach(placement => {
+        let face = faceImages[placement[2]]
+        image(face, placement[0], placement[1], face.width/5, face.height/5);
+    });
 }
