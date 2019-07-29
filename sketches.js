@@ -706,7 +706,34 @@ function faces(){
     }
     shuffleFace = shuffle(facePlacements);
     shuffleFace.forEach(placement => {
-        let face = faceImages[placement[2]]
+        let face = faceImages[placement[2]];
         image(face, placement[0], placement[1], face.width/5, face.height/5);
     });
+}
+
+let randVals = arrayOf(24).map(v => Math.random());
+function faces2Setup(){
+    createCanvas(w, h);
+    faceImages[0] = loadImage("faces/jay.png");
+    faceImages[1] = loadImage("faces/dac.png");
+    faceImages[2] = loadImage("faces/neesh.png");
+    faceImages[3] = loadImage("faces/jack.png");
+    faceImages[4] = loadImage("faces/rohit.png");
+    faceImages[5] = loadImage("faces/gary.png");
+
+}
+
+
+function faces2(){
+    let yStep = 24;
+    frameInd++;
+    // if(frameInd%5 != 0) return;
+    time = (Date.now()/1000);
+    for(let y = 0; y < yStep; y++){
+        let xPos = (time*100) % w ;
+        let yPos = h/yStep*y + sin(time * (1+randVals[y]))*yStep;
+        let faceInd = Math.floor(mod(y/yStep, 1) * 6 );
+        let face = faceImages[faceInd];
+        image(face, xPos, yPos, face.width/5, face.height/5);
+    }
 }
