@@ -676,3 +676,33 @@ function chairSqueak(){
         line(tickX, tickTop, tickX, tickTop+rectHeight*0.1);
     });
 }
+
+
+let faceImages = [];
+let facePlacements = [];
+function facesSetup(){
+    createCanvas(w, h);
+    faceImages[0] = loadImage("faces/jay.png");
+    faceImages[1] = loadImage("faces/dac.png");
+    faceImages[2] = loadImage("faces/neesh.png");
+    faceImages[3] = loadImage("faces/jack.png");
+    faceImages[4] = loadImage("faces/rohit.png");
+    faceImages[5] = loadImage("faces/gary.png");
+    noLoop();
+}
+
+
+function faces(){
+    let xStep = 80;
+    let yStep = 30;
+    for(let x = 0; x < xStep; x++){
+        for(let y = 0; y < yStep; y++){
+            let xPos = w/xStep*x + (random()-0.5)*xStep;
+            let yPos = h/yStep*y + (random()-0.5)*yStep;
+            let faceInd = Math.floor(random()*6);
+            facePlacements.push([xPos, yPos, faceInd]);
+            let face = faceImages[faceInd];
+            image(face, xPos, yPos, face.width/5, face.height/5);
+        }
+    }
+}
