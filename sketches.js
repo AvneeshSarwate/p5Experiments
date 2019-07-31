@@ -741,16 +741,17 @@ function faces2(){
 }
 
 let bachMidi;
+mouths = [0, 2, 4, 6]
 function faceSingersSetup(){
     createCanvas(w, h);
-    faceImages[0] = loadImage("faces/jay.png");
-    faceImages[1] = loadImage("faces/dac.png");
-    faceImages[2] = loadImage("faces/neesh.png");
-    faceImages[3] = loadImage("faces/jack.png");
-    faceImages[4] = loadImage("faces/rohit.png");
-    faceImages[5] = loadImage("faces/gary.png");
-    faceImages[7] = loadImage("faces/rohit.png");
-    faceImages[8] = loadImage("faces/gary.png");
+    faceImages[1] = loadImage("faces/openclose/jay_open.png");
+    faceImages[0] = loadImage("faces/openclose/jay_closed.png");
+    faceImages[3] = loadImage("faces/openclose/jack_open.png");
+    faceImages[2] = loadImage("faces/openclose/jack_closed.png");
+    faceImages[5] = loadImage("faces/openclose/gary_open.png");
+    faceImages[4] = loadImage("faces/openclose/gary_closed.png");
+    faceImages[7] = loadImage("faces/openclose/dac_open.png");
+    faceImages[6] = loadImage("faces/openclose/dac_closed.png");
 
     // Enable WebMidi.js
     WebMidi.enable(function (err) {
@@ -761,10 +762,25 @@ function faceSingersSetup(){
             // Retrieve an input by name, id or index
             var input = WebMidi.getInputByName("Bus 2");
 
-            // Listen for a 'note on' message on all channels
+            //map individual head to it's mouth-state-image
             input.addListener('noteon', "all", function (e) {
-                
+                // console.log("on", e);
+                mouths[e.channel-1] = (e.channel-1)*2 + 1;
+            });
+            input.addListener('noteoff', "all", function (e) {
+                // console.log("off", e);
+                mouths[e.channel-1] = (e.channel-1)*2;
             });
         }
     });
+}
+
+function faceSingers(){
+    clear();
+    background(255);
+    //for each head, draw it's mouth state
+    mouths.forEach((imgInd, faceInd)=>{
+        let face = faceImages[imgInd];
+        image(face, faceInd*w/8 + w/8, h/4, face.width/10, face.height/10);
+    })
 }
