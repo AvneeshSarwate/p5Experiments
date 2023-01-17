@@ -1,0 +1,7 @@
+{
+    "prettier.enable": false,
+    "editor.autoIndent": "none",
+    "editor.formatOnSave": false,
+    "html.format.enable": false,
+    "javascript.format.enable": false,
+}

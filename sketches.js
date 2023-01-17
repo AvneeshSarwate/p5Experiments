@@ -711,6 +711,39 @@ function faces(){
     });
 }
 
+function faces_ishaSetup(){
+    createCanvas(w, h);
+    for(let i = 0; i < 16; i++) { 
+        faceImages[i] = loadImage("faces_isha/face" + i + ".png");
+    }
+    // noLoop();
+}
+
+
+function faces_isha(){
+    if(frameCount == 0) {
+        let xStep = 60;
+        let yStep = 24;
+        for(let x = 0; x < xStep; x++){
+            for(let y = 0; y < yStep; y++){
+                let xPos = w/xStep*x + (random()-0.5)*xStep;
+                let yPos = h/yStep*y + (random()-0.5)*yStep;
+                let faceInd = Math.floor(random()*6);
+                facePlacements.push([xPos, yPos, faceInd]);
+            }
+        }
+        shuffleFace = shuffle(facePlacements);
+        shuffleFace.forEach(placement => {
+            let face = faceImages[placement[2]];
+            image(face, placement[0], placement[1], face.width/5, face.height/5);
+        });
+    } else {
+        let face = faceImages[frameCount%16];
+        let placement = [Math.random()*w, Math.random()*h]
+        image(face, placement[0], placement[1], face.width/5, face.height/5);
+    }
+}
+
 let randVals = arrayOf(24).map(v => Math.random());
 let cvn; 
 function faces2Setup(){
