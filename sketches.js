@@ -1,8 +1,8 @@
 var capture;
 var previousPixels;
 var flow;
-var w = 1280*1.2,
-    h = 720*1.2;
+var w = 1280*1.5,
+    h = 720*1.5;
 var step = 8;
 var vidScale = 2;
 var cos = Math.cos;
@@ -696,6 +696,7 @@ function facesSetup(){
 function faces(){
     let xStep = 60;
     let yStep = 24;
+    facePlacements = [];
     for(let x = 0; x < xStep; x++){
         for(let y = 0; y < yStep; y++){
             let xPos = w/xStep*x + (random()-0.5)*xStep;
@@ -711,37 +712,69 @@ function faces(){
     });
 }
 
-function faces_ishaSetup(){
-    createCanvas(w, h);
+var faceDims = [];
+var scaleToMinWidth = [];
+function preload() {
     for(let i = 0; i < 16; i++) { 
         faceImages[i] = loadImage("faces_isha/face" + i + ".png");
     }
-    // noLoop();
+}
+
+var minW = 100000;
+function faces_ishaSetup(){
+    createCanvas(w, h);
+    
+    for(let i = 0; i < 16; i++) { 
+        faceDims[i] = {w: faceImages[i].width, h: faceImages[i].height};
+        console.log(faceDims[i], faceImages[i].width, faceImages[i].height);
+        if(faceDims[i].w < minW) minW = faceDims[i].w;
+    }
+    for(let i = 0; i < 16; i++) {
+        scaleToMinWidth[i] = minW/faceDims[i].w;
+    }
+
+    noLoop();
 }
 
 
 function faces_isha(){
-    if(frameCount == 0) {
+    // if(frameCount == 0) {
         let xStep = 60;
         let yStep = 24;
+        facePlacements = [];
         for(let x = 0; x < xStep; x++){
             for(let y = 0; y < yStep; y++){
                 let xPos = w/xStep*x + (random()-0.5)*xStep;
                 let yPos = h/yStep*y + (random()-0.5)*yStep;
-                let faceInd = Math.floor(random()*6);
+                let faceInd = Math.floor(random()*faceImages.length);
                 facePlacements.push([xPos, yPos, faceInd]);
             }
         }
         shuffleFace = shuffle(facePlacements);
         shuffleFace.forEach(placement => {
-            let face = faceImages[placement[2]];
-            image(face, placement[0], placement[1], face.width/5, face.height/5);
+            let faceInd = placement[2];
+            let face = faceImages[faceInd];
+            let scale = 0.2; scaleToMinWidth[faceInd] * 0.25;
+            var fw = face.width*scale;
+            var fh = face.height*scale;
+            image(face, placement[0] - fw/2, placement[1] - fh/2, fw, fh);
         });
-    } else {
-        let face = faceImages[frameCount%16];
-        let placement = [Math.random()*w, Math.random()*h]
-        image(face, placement[0], placement[1], face.width/5, face.height/5);
-    }
+    // } else {
+        // let face = faceImages[frameCount%16];
+        // let placement = [Math.random()*w, Math.random()*h]
+        // image(face, placement[0], placement[1], face.width/5, face.height/5);
+    // }
+}
+
+let saveCount = 0;
+let saveMax = 50;
+let delay = 100;
+function saveFaces() {
+    saveCanvas("faces" + saveCount, "png");
+    draw();
+    console.log("saved " + saveCount);
+    saveCount++;
+    if(saveCount < saveMax) setTimeout(saveFaces, delay);
 }
 
 let randVals = arrayOf(24).map(v => Math.random());
